@@ -1,0 +1,53 @@
+name: Run AI Scientist
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: 'Model to use'
+        required: true
+        default: 'github/gpt-4o-mini'
+        type: choice
+        options:
+          - github/gpt-4o-mini
+          - github/gpt-4o
+          - github/DeepSeek-R1
+          - github/Llama-3.3-70B-Instruct
+          - github/Phi-4
+          - github/Mistral-small-3.1-24B-Instruct-2503
+          - github/Meta-Llama-3.1-405B-Instruct
+          - github/Meta-Llama-3.1-8B-Instruct
+      experiment:
+        description: 'Experiment template to run'
+        required: true
+        default: 'nanoGPT_lite'
+      num_ideas:
+        description: 'Number of ideas to generate'
+        required: true
+        default: '2'
+
+jobs:
+  run-scientist:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run AI Scientist
+        env:
+          MY_LLM_TOKEN: ${{ secrets.MY_LLM_TOKEN }}
+        run: |
+          python launch_scientist.py \
+            --model "${{ github.event.inputs.model }}" \
+            --experiment "${{ github.event.inputs.experiment }}" \
+            --num-ideas "${{ github.event.inputs.num_ideas }}"

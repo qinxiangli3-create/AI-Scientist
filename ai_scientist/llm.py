@@ -59,6 +59,17 @@ AVAILABLE_LLMS = [
     "gemini-2.0-flash-thinking-exp-01-21",
     "gemini-2.5-pro-preview-03-25",
     "gemini-2.5-pro-exp-03-25",
+    # GitHub Models
+    "github/gpt-4o",
+    "github/gpt-4o-mini",
+    "github/DeepSeek-R1",
+    "github/Llama-3.3-70B-Instruct",
+    "github/Phi-4",
+    "github/Mistral-small-3.1-24B-Instruct-2503",
+    "github/Meta-Llama-3.1-405B-Instruct",
+    "github/Meta-Llama-3.1-8B-Instruct",
+    "github/Llama-3.2-90B-Vision-Instruct",
+    "github/Llama-3.2-11B-Vision-Instruct",
 ]
 
 
@@ -271,6 +282,21 @@ def get_response_from_llm(
         )
         content = response.choices[0].message.content
         new_msg_history = new_msg_history + [{"role": "assistant", "content": content}]
+    elif model.startswith("github/"):
+        actual_model = model.split("/", 1)[1]
+        new_msg_history = msg_history + [{"role": "user", "content": msg}]
+        response = client.chat.completions.create(
+            model=actual_model,
+            messages=[
+                {"role": "system", "content": system_message},
+                *new_msg_history,
+            ],
+            temperature=temperature,
+            max_tokens=MAX_NUM_TOKENS,
+            n=1,
+        )
+        content = response.choices[0].message.content
+        new_msg_history = new_msg_history + [{"role": "assistant", "content": content}]
     else:
         raise ValueError(f"Model {model} not supported.")
 
@@ -346,6 +372,13 @@ def create_client(model):
         return openai.OpenAI(
             api_key=os.environ["GEMINI_API_KEY"],
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+        ), model
+    elif model.startswith("github/"):
+        actual_model = model.split("/", 1)[1]
+        print(f"Using GitHub Models API with model {actual_model}.")
+        return openai.OpenAI(
+            api_key=os.environ["MY_LLM_TOKEN"],
+            base_url="https://models.inference.ai.azure.com",
         ), model
     else:
         raise ValueError(f"Model {model} not supported.")
