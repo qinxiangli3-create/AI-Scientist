@@ -103,22 +103,29 @@ def check_latex_dependencies():
     Check if required LaTeX dependencies are installed on the system.
     Returns True if all dependencies are found, False otherwise.
     """
-    import shutil
-    import sys
-
-    required_dependencies = ['pdflatex', 'chktex']
+    required_dependencies = ['pdflatex', 'bibtex', 'chktex']
     missing_deps = []
 
     for dep in required_dependencies:
         if shutil.which(dep) is None:
             missing_deps.append(dep)
-    
+
     if missing_deps:
-        print("Error: Required LaTeX dependencies not found:", file=sys.stderr)
+        print(
+            f"Error: Required LaTeX dependencies not found: {', '.join(missing_deps)}",
+            file=sys.stderr,
+        )
+        print(
+            "Please install them. On Ubuntu/Debian, run:\n"
+            "  sudo apt-get install -y texlive-latex-extra texlive-bibtex-extra "
+            "texlive-fonts-recommended texlive-science chktex",
+            file=sys.stderr,
+        )
         return False
-    
+
     return True
-    
+
+
 def worker(
         queue,
         base_dir,
