@@ -114,7 +114,9 @@ def check_latex_dependencies():
             missing_deps.append(dep)
     
     if missing_deps:
-        print("Error: Required LaTeX dependencies not found:", file=sys.stderr)
+        print(f"Error: Required LaTeX dependencies not found: {', '.join(missing_deps)}", file=sys.stderr)
+        print("To install LaTeX on Ubuntu/Debian, run:", file=sys.stderr)
+        print("  sudo apt-get update && sudo apt-get install -y texlive-full chktex", file=sys.stderr)
         return False
     
     return True
