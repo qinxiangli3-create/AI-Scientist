@@ -88,7 +88,24 @@ def get_batch_responses_from_llm(
     if msg_history is None:
         msg_history = []
 
-    if 'gpt' in model:
+    if model.startswith("github/"):
+        actual_model = model.split("/", 1)[1]
+        new_msg_history = msg_history + [{"role": "user", "content": msg}]
+        response = client.chat.completions.create(
+            model=actual_model,
+            messages=[
+                {"role": "system", "content": system_message},
+                *new_msg_history,
+            ],
+            temperature=temperature,
+            max_tokens=MAX_NUM_TOKENS,
+            n=n_responses,
+        )
+        content = [r.message.content for r in response.choices]
+        new_msg_history = [
+            new_msg_history + [{"role": "assistant", "content": c}] for c in content
+        ]
+    elif 'gpt' in model:
         new_msg_history = msg_history + [{"role": "user", "content": msg}]
         response = client.chat.completions.create(
             model=model,
@@ -194,6 +211,21 @@ def get_response_from_llm(
                 ],
             }
         ]
+    elif model.startswith("github/"):
+        actual_model = model.split("/", 1)[1]
+        new_msg_history = msg_history + [{"role": "user", "content": msg}]
+        response = client.chat.completions.create(
+            model=actual_model,
+            messages=[
+                {"role": "system", "content": system_message},
+                *new_msg_history,
+            ],
+            temperature=temperature,
+            max_tokens=MAX_NUM_TOKENS,
+            n=1,
+        )
+        content = response.choices[0].message.content
+        new_msg_history = new_msg_history + [{"role": "assistant", "content": content}]
     elif 'gpt' in model:
         new_msg_history = msg_history + [{"role": "user", "content": msg}]
         response = client.chat.completions.create(
@@ -282,21 +314,6 @@ def get_response_from_llm(
         )
         content = response.choices[0].message.content
         new_msg_history = new_msg_history + [{"role": "assistant", "content": content}]
-    elif model.startswith("github/"):
-        actual_model = model.split("/", 1)[1]
-        new_msg_history = msg_history + [{"role": "user", "content": msg}]
-        response = client.chat.completions.create(
-            model=actual_model,
-            messages=[
-                {"role": "system", "content": system_message},
-                *new_msg_history,
-            ],
-            temperature=temperature,
-            max_tokens=MAX_NUM_TOKENS,
-            n=1,
-        )
-        content = response.choices[0].message.content
-        new_msg_history = new_msg_history + [{"role": "assistant", "content": content}]
     else:
         raise ValueError(f"Model {model} not supported.")
 
@@ -352,6 +369,13 @@ def create_client(model):
         client_model = model.split("/")[-1]
         print(f"Using Vertex AI with model {client_model}.")
         return anthropic.AnthropicVertex(), client_model
+    elif model.startswith("github/"):
+        actual_model = model.split("/", 1)[1]
+        print(f"Using GitHub Models API with model {actual_model}.")
+        return openai.OpenAI(
+            api_key=os.environ["MY_LLM_TOKEN"],
+            base_url="https://models.inference.ai.azure.com",
+        ), model
     elif 'gpt' in model or "o1" in model or "o3" in model:
         print(f"Using OpenAI API with model {model}.")
         return openai.OpenAI(), model
@@ -372,13 +396,6 @@ def create_client(model):
         return openai.OpenAI(
             api_key=os.environ["GEMINI_API_KEY"],
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-        ), model
-    elif model.startswith("github/"):
-        actual_model = model.split("/", 1)[1]
-        print(f"Using GitHub Models API with model {actual_model}.")
-        return openai.OpenAI(
-            api_key=os.environ["MY_LLM_TOKEN"],
-            base_url="https://models.inference.ai.azure.com",
         ), model
     else:
         raise ValueError(f"Model {model} not supported.")
