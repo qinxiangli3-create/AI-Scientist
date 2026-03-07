@@ -114,7 +114,11 @@ def check_latex_dependencies():
             missing_deps.append(dep)
     
     if missing_deps:
-        print("Error: Required LaTeX dependencies not found:", file=sys.stderr)
+        print(
+            f"Warning: Required LaTeX dependencies not found ({', '.join(missing_deps)}). "
+            "Continuing, but LaTeX writeup/review steps may fail.",
+            file=sys.stderr,
+        )
         return False
     
     return True
@@ -332,8 +336,8 @@ if __name__ == "__main__":
     print(f"Using GPUs: {available_gpus}")
 
     # Check LaTeX dependencies before proceeding
-    if args.writeup == "latex" and not check_latex_dependencies():
-        sys.exit(1)
+    if args.writeup == "latex":
+        check_latex_dependencies()
 
     # Create client
     client, client_model = create_client(args.model)
