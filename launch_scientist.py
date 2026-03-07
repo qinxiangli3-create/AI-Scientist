@@ -100,8 +100,8 @@ def get_available_gpus(gpu_ids=None):
 
 def check_latex_dependencies():
     """
-    Check if required LaTeX dependencies are installed on the system.
-    Returns True if all dependencies are found, False otherwise.
+    Check if LaTeX dependencies are installed on the system.
+    Prints a warning to stderr when dependencies are missing.
     """
     import shutil
     import sys
@@ -115,13 +115,11 @@ def check_latex_dependencies():
     
     if missing_deps:
         print(
-            f"Warning: Required LaTeX dependencies not found ({', '.join(missing_deps)}). "
+            f"Warning: LaTeX dependencies not found ({', '.join(missing_deps)}). "
+            "Install these dependencies to enable LaTeX writeup functionality. "
             "Continuing, but LaTeX writeup/review steps may fail.",
             file=sys.stderr,
         )
-        return False
-    
-    return True
     
 def worker(
         queue,
