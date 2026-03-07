@@ -100,24 +100,29 @@ def get_available_gpus(gpu_ids=None):
 
 def check_latex_dependencies():
     """
-    Check if required LaTeX dependencies are installed on the system.
-    Returns True if all dependencies are found, False otherwise.
+    Check whether LaTeX dependencies are available on the system.
+    Warn if LaTeX dependencies are unavailable at startup.
     """
     import shutil
     import sys
 
-    required_dependencies = ['pdflatex', 'chktex']
+    latex_dependencies = ["pdflatex", "chktex"]
     missing_deps = []
 
-    for dep in required_dependencies:
+    for dep in latex_dependencies:
         if shutil.which(dep) is None:
             missing_deps.append(dep)
-    
+
     if missing_deps:
-        print("Error: Required LaTeX dependencies not found:", file=sys.stderr)
-        return False
-    
-    return True
+        print(
+            "Warning: LaTeX dependencies not found: "
+            + ", ".join(missing_deps),
+            file=sys.stderr,
+        )
+        print(
+            "Continuing without LaTeX support; writeup generation may fail later.",
+            file=sys.stderr,
+        )
     
 def worker(
         queue,
@@ -332,8 +337,8 @@ if __name__ == "__main__":
     print(f"Using GPUs: {available_gpus}")
 
     # Check LaTeX dependencies before proceeding
-    if args.writeup == "latex" and not check_latex_dependencies():
-        sys.exit(1)
+    if args.writeup == "latex":
+        check_latex_dependencies()
 
     # Create client
     client, client_model = create_client(args.model)
