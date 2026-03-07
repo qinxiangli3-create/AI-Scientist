@@ -106,17 +106,25 @@ def check_latex_dependencies():
     import shutil
     import sys
 
-    required_dependencies = ['pdflatex', 'chktex']
+    required_dependencies = ["pdflatex", "chktex"]
     missing_deps = []
 
     for dep in required_dependencies:
         if shutil.which(dep) is None:
             missing_deps.append(dep)
-    
+
     if missing_deps:
-        print("Error: Required LaTeX dependencies not found:", file=sys.stderr)
+        print(
+            "Warning: Required LaTeX dependencies not found: "
+            + ", ".join(missing_deps),
+            file=sys.stderr,
+        )
+        print(
+            "Continuing without LaTeX dependency enforcement; writeup generation may fail later.",
+            file=sys.stderr,
+        )
         return False
-    
+
     return True
     
 def worker(
@@ -332,8 +340,8 @@ if __name__ == "__main__":
     print(f"Using GPUs: {available_gpus}")
 
     # Check LaTeX dependencies before proceeding
-    if args.writeup == "latex" and not check_latex_dependencies():
-        sys.exit(1)
+    if args.writeup == "latex":
+        check_latex_dependencies()
 
     # Create client
     client, client_model = create_client(args.model)
