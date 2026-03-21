@@ -8,6 +8,7 @@ google-generativeai
 matplotlib
 pypdf
 pymupdf4llm
+pymupdf-layout
 # Common Requirements
 torch
 numpy
